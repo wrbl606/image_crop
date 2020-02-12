@@ -43,7 +43,6 @@ class _MyAppState extends State<MyApp> {
       home: SafeArea(
         child: Container(
           color: Colors.black,
-          padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
           child: _sample == null ? _buildOpeningImage() : _buildCroppingImage(),
         ),
       ),

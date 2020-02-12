@@ -542,7 +542,7 @@ class _CropPainter extends CustomPainter {
     canvas.save();
     canvas.translate(rect.left, rect.top);
 
-    final paint = Paint()..isAntiAlias = false;
+    final paint = Paint()..isAntiAlias = true;
 
     if (image != null) {
       final src = Rect.fromLTWH(
