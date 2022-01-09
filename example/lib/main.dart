@@ -37,55 +37,62 @@ class _MyAppState extends State<MyApp> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: SafeArea(
-        child: Container(
-          color: Colors.black,
-          padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
-          child: _sample == null ? _buildOpeningImage() : _buildCroppingImage(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOpeningImage() {
-    return Center(child: _buildOpenImage());
-  }
-
-  Widget _buildCroppingImage() {
-    return Column(
-      children: <Widget>[
-        Expanded(
-          child: Crop.file(
-            _sample,
-            key: cropKey,
+  Widget build(BuildContext context) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: SafeArea(
+          child: Container(
+            color: Colors.black,
+            padding:
+                const EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
+            child:
+                _sample == null ? _buildOpeningImage() : _buildCroppingImage(),
           ),
         ),
-        Container(
-          padding: const EdgeInsets.only(top: 20.0),
-          alignment: AlignmentDirectional.center,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              TextButton(
-                child: Text(
-                  'Crop Image',
-                  style: Theme.of(context)
-                      .textTheme
-                      .button
-                      .copyWith(color: Colors.white),
+      );
+
+  Widget _buildOpeningImage() => Center(child: _buildOpenImage());
+
+  Widget _buildCroppingImage() => Column(
+        children: <Widget>[
+          Expanded(
+            child: Crop.file(
+              _sample,
+              key: cropKey,
+            ),
+          ),
+          FutureBuilder<Size>(
+            initialData: Size.zero,
+            future: loadImageSize(_sample, imageLoader: loadImageOrThrow),
+            builder: (context, snapshot) => Text(
+              '${snapshot.data.width.floor()}x${snapshot.data.height.floor()}px',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyText1
+                  .copyWith(color: Colors.white),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.only(top: 20.0),
+            alignment: AlignmentDirectional.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                TextButton(
+                  child: Text(
+                    'Crop Image',
+                    style: Theme.of(context)
+                        .textTheme
+                        .button
+                        .copyWith(color: Colors.white),
+                  ),
+                  onPressed: () => _cropImage(),
                 ),
-                onPressed: () => _cropImage(),
-              ),
-              _buildOpenImage(),
-            ],
-          ),
-        )
-      ],
-    );
-  }
+                _buildOpenImage(),
+              ],
+            ),
+          )
+        ],
+      );
 
   Widget _buildOpenImage() {
     return TextButton(
@@ -101,6 +108,7 @@ class _MyAppState extends State<MyApp> {
     final pickedFile =
         await ImagePicker().getImage(source: ImageSource.gallery);
     final file = File(pickedFile.path);
+
     final sample = await ImageCrop.sampleImage(
       file: file,
       preferredSize: context.size.longestSide.toInt() * 2,
