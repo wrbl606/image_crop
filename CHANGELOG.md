@@ -1,3 +1,9 @@
+## 1.0.0
+
+* AGP 8 support
+* Flutter 3+ support
+* Dart 3+ support
+
 ## 0.6.1
 
 * changed animations to more "soft" or iOS-like
