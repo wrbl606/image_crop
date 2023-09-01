@@ -24,9 +24,9 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final cropKey = GlobalKey<CropState>();
-  File _file;
-  File _sample;
-  File _lastCropped;
+  File? _file;
+  File? _sample;
+  File? _lastCropped;
 
   @override
   void dispose() {
@@ -59,7 +59,7 @@ class _MyAppState extends State<MyApp> {
       children: <Widget>[
         Expanded(
           child: Crop.file(
-            _sample,
+            _sample!,
             key: cropKey,
           ),
         ),
@@ -74,8 +74,8 @@ class _MyAppState extends State<MyApp> {
                   'Crop Image',
                   style: Theme.of(context)
                       .textTheme
-                      .button
-                      .copyWith(color: Colors.white),
+                      .labelLarge
+                      ?.copyWith(color: Colors.white),
                 ),
                 onPressed: () => _cropImage(),
               ),
@@ -91,7 +91,10 @@ class _MyAppState extends State<MyApp> {
     return TextButton(
       child: Text(
         'Open Image',
-        style: Theme.of(context).textTheme.button.copyWith(color: Colors.white),
+        style: Theme.of(context)
+            .textTheme
+            .labelLarge
+            ?.copyWith(color: Colors.white),
       ),
       onPressed: () => _openImage(),
     );
@@ -100,10 +103,10 @@ class _MyAppState extends State<MyApp> {
   Future<void> _openImage() async {
     final pickedFile =
         await ImagePicker().getImage(source: ImageSource.gallery);
-    final file = File(pickedFile.path);
+    final file = File(pickedFile!.path);
     final sample = await ImageCrop.sampleImage(
       file: file,
-      preferredSize: context.size.longestSide.toInt() * 2,
+      preferredSize: context.size!.longestSide.toInt() * 2,
     );
 
     _sample?.delete();
@@ -116,8 +119,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _cropImage() async {
-    final scale = cropKey.currentState.scale;
-    final area = cropKey.currentState.area;
+    final scale = cropKey.currentState!.scale;
+    final area = cropKey.currentState!.area;
     if (area == null) {
       // cannot crop, widget is not setup
       return;
@@ -126,7 +129,7 @@ class _MyAppState extends State<MyApp> {
     // scale up to use maximum possible number of pixels
     // this will sample image in higher resolution to make cropped image larger
     final sample = await ImageCrop.sampleImage(
-      file: _file,
+      file: _file!,
       preferredSize: (2000 / scale).round(),
     );
 
