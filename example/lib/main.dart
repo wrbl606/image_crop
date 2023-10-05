@@ -65,6 +65,8 @@ class _MyAppState extends State<MyApp> {
             showHandles: false,
             aspectRatio: 1.0,
             key: cropKey,
+            style: const CropStyle(
+                cropOverlayInactiveOpacity: 0.9, cropOverlayActiveOpacity: 0.7),
           ),
         ),
         Container(

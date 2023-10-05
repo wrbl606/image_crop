@@ -1,20 +1,40 @@
 part of image_crop_plus;
 
-const _kCropGridColumnCount = 3;
-const _kCropGridRowCount = 3;
-const _kCropGridColor = Color.fromRGBO(0xd0, 0xd0, 0xd0, 0.9);
-const _kCropGridAnimationDuration = const Duration(milliseconds: 250);
-const _kCropOverlayActiveOpacity = 0.3;
-const _kCropOverlayInactiveOpacity = 0.7;
-const _kCropHandleColor = Color.fromRGBO(0xd0, 0xd0, 0xd0, 1.0);
-const _kCropHandleSize = 10.0;
-const _kCropBarColor = Color.fromRGBO(0xd0, 0xd0, 0xd0, 0.6);
-const _kCropBarSize = const Size(15, 3);
-const _kCropHandleHitSize = 48.0;
-const _kCropMinFraction = 0.1;
-const _kOverlayColor = Color(0x0);
-const _kSettleAnimationDuration = const Duration(seconds: 1);
-const _kSettleAnimationCurve = Curves.fastLinearToSlowEaseIn;
+class CropStyle {
+  final int cropGridColumnCount;
+  final int cropGridRowCount;
+  final Color cropGridColor;
+  final Duration cropGridAnimationDuration;
+  final double cropOverlayActiveOpacity;
+  final double cropOverlayInactiveOpacity;
+  final Color cropHandleColor;
+  final double cropHandleSize;
+  final Color cropBarColor;
+  final Size cropBarSize;
+  final double cropHandleHitSize;
+  final double cropMinFraction;
+  final Color overlayColor;
+  final Duration settleAnimationDuration;
+  final Curve settleAnimationCurve;
+
+  const CropStyle({
+    this.cropGridColumnCount = 3,
+    this.cropGridRowCount = 3,
+    this.cropGridColor = const Color.fromRGBO(0xd0, 0xd0, 0xd0, 0.9),
+    this.cropGridAnimationDuration = const Duration(milliseconds: 250),
+    this.cropOverlayActiveOpacity = 0.3,
+    this.cropOverlayInactiveOpacity = 0.7,
+    this.cropHandleColor = const Color.fromRGBO(0xd0, 0xd0, 0xd0, 1.0),
+    this.cropHandleSize = 10.0,
+    this.cropBarColor = const Color.fromRGBO(0xd0, 0xd0, 0xd0, 0.6),
+    this.cropBarSize = const Size(15, 3),
+    this.cropHandleHitSize = 48.0,
+    this.cropMinFraction = 0.1,
+    this.overlayColor = const Color(0x0),
+    this.settleAnimationDuration = const Duration(seconds: 1),
+    this.settleAnimationCurve = Curves.fastLinearToSlowEaseIn,
+  });
+}
 
 enum _CropAction { none, moving, cropping, scaling }
 
@@ -39,6 +59,7 @@ class Crop extends StatefulWidget {
   final bool fixedCropArea;
   final bool ovalCropArea;
   final bool showHandles;
+  final CropStyle style;
 
   const Crop({
     Key? key,
@@ -50,6 +71,7 @@ class Crop extends StatefulWidget {
     this.fixedCropArea = false,
     this.ovalCropArea = false,
     this.showHandles = true,
+    this.style = const CropStyle(),
   }) : super(key: key);
 
   Crop.file(
@@ -63,6 +85,7 @@ class Crop extends StatefulWidget {
     this.fixedCropArea = false,
     this.ovalCropArea = false,
     this.showHandles = true,
+    this.style = const CropStyle(),
   })  : image = FileImage(file, scale: scale),
         super(key: key);
 
@@ -78,6 +101,7 @@ class Crop extends StatefulWidget {
     this.fixedCropArea = false,
     this.ovalCropArea = false,
     this.showHandles = true,
+    this.style = const CropStyle(),
   })  : image = AssetImage(assetName, bundle: bundle, package: package),
         super(key: key);
 
@@ -223,6 +247,7 @@ class CropState extends State<Crop> with TickerProviderStateMixin {
                 active: _activeController.value,
                 showHandles: widget.showHandles,
                 ovalCropArea: widget.ovalCropArea,
+                style: widget.style,
               ),
             ),
           ),
@@ -233,7 +258,7 @@ class CropState extends State<Crop> with TickerProviderStateMixin {
     _activeController.animateTo(
       1.0,
       curve: Curves.easeOutCubic,
-      duration: _kCropGridAnimationDuration,
+      duration: widget.style.cropGridAnimationDuration,
     );
   }
 
@@ -242,7 +267,7 @@ class CropState extends State<Crop> with TickerProviderStateMixin {
       _activeController.animateTo(
         0.0,
         curve: Curves.easeInCubic,
-        duration: _kCropGridAnimationDuration,
+        duration: widget.style.cropGridAnimationDuration,
       );
     }
   }
@@ -258,7 +283,9 @@ class CropState extends State<Crop> with TickerProviderStateMixin {
       return null;
     }
 
-    return size - const Offset(_kCropHandleSize, _kCropHandleSize) as Size;
+    return size -
+            Offset(widget.style.cropHandleSize, widget.style.cropHandleSize)
+        as Size;
   }
 
   Offset? _getLocalPoint(Offset point) {
@@ -376,76 +403,76 @@ class CropState extends State<Crop> with TickerProviderStateMixin {
       boundaries.height * _area.top,
       boundaries.width * _area.width,
       boundaries.height * _area.height,
-    ).deflate(_kCropHandleSize / 2);
+    ).deflate(widget.style.cropHandleSize / 2);
 
     if (Rect.fromLTWH(
-      viewRect.left - _kCropHandleHitSize / 2,
-      viewRect.top - _kCropHandleHitSize / 2,
-      _kCropHandleHitSize,
-      _kCropHandleHitSize,
+      viewRect.left - widget.style.cropHandleHitSize / 2,
+      viewRect.top - widget.style.cropHandleHitSize / 2,
+      widget.style.cropHandleHitSize,
+      widget.style.cropHandleHitSize,
     ).contains(localPoint)) {
       return _CropHandleSide.topLeft;
     }
 
     if (Rect.fromLTWH(
-      viewRect.topLeft.dx + _kCropHandleHitSize,
-      viewRect.top - _kCropHandleHitSize / 2,
-      viewRect.width - _kCropHandleHitSize,
-      _kCropHandleHitSize,
+      viewRect.topLeft.dx + widget.style.cropHandleHitSize,
+      viewRect.top - widget.style.cropHandleHitSize / 2,
+      viewRect.width - widget.style.cropHandleHitSize,
+      widget.style.cropHandleHitSize,
     ).contains(localPoint)) {
       return _CropHandleSide.top;
     }
 
     if (Rect.fromLTWH(
-      viewRect.right - _kCropHandleHitSize / 2,
-      viewRect.top - _kCropHandleHitSize / 2,
-      _kCropHandleHitSize,
-      _kCropHandleHitSize,
+      viewRect.right - widget.style.cropHandleHitSize / 2,
+      viewRect.top - widget.style.cropHandleHitSize / 2,
+      widget.style.cropHandleHitSize,
+      widget.style.cropHandleHitSize,
     ).contains(localPoint)) {
       return _CropHandleSide.topRight;
     }
 
     if (Rect.fromLTWH(
-      viewRect.right - _kCropHandleHitSize / 2,
-      viewRect.topRight.dy + _kCropHandleHitSize / 2,
-      _kCropHandleHitSize,
-      viewRect.height - _kCropHandleHitSize,
+      viewRect.right - widget.style.cropHandleHitSize / 2,
+      viewRect.topRight.dy + widget.style.cropHandleHitSize / 2,
+      widget.style.cropHandleHitSize,
+      viewRect.height - widget.style.cropHandleHitSize,
     ).contains(localPoint)) {
       return _CropHandleSide.right;
     }
 
     if (Rect.fromLTWH(
-      viewRect.left - _kCropHandleHitSize / 2,
-      viewRect.bottom - _kCropHandleHitSize / 2,
-      _kCropHandleHitSize,
-      _kCropHandleHitSize,
+      viewRect.left - widget.style.cropHandleHitSize / 2,
+      viewRect.bottom - widget.style.cropHandleHitSize / 2,
+      widget.style.cropHandleHitSize,
+      widget.style.cropHandleHitSize,
     ).contains(localPoint)) {
       return _CropHandleSide.bottomLeft;
     }
 
     if (Rect.fromLTWH(
-      viewRect.bottomLeft.dx + _kCropHandleHitSize,
-      viewRect.bottom - _kCropHandleHitSize / 2,
-      viewRect.width - _kCropHandleHitSize,
-      _kCropHandleHitSize,
+      viewRect.bottomLeft.dx + widget.style.cropHandleHitSize,
+      viewRect.bottom - widget.style.cropHandleHitSize / 2,
+      viewRect.width - widget.style.cropHandleHitSize,
+      widget.style.cropHandleHitSize,
     ).contains(localPoint)) {
       return _CropHandleSide.bottom;
     }
 
     if (Rect.fromLTWH(
-      viewRect.right - _kCropHandleHitSize / 2,
-      viewRect.bottom - _kCropHandleHitSize / 2,
-      _kCropHandleHitSize,
-      _kCropHandleHitSize,
+      viewRect.right - widget.style.cropHandleHitSize / 2,
+      viewRect.bottom - widget.style.cropHandleHitSize / 2,
+      widget.style.cropHandleHitSize,
+      widget.style.cropHandleHitSize,
     ).contains(localPoint)) {
       return _CropHandleSide.bottomRight;
     }
 
     if (Rect.fromLTWH(
-      viewRect.left - _kCropHandleHitSize / 2,
-      viewRect.topLeft.dy + _kCropHandleHitSize,
-      _kCropHandleHitSize,
-      viewRect.height - _kCropHandleHitSize,
+      viewRect.left - widget.style.cropHandleHitSize / 2,
+      viewRect.topLeft.dy + widget.style.cropHandleHitSize,
+      widget.style.cropHandleHitSize,
+      viewRect.height - widget.style.cropHandleHitSize,
     ).contains(localPoint)) {
       return _CropHandleSide.left;
     }
@@ -520,8 +547,8 @@ class CropState extends State<Crop> with TickerProviderStateMixin {
     _settleController.value = 0.0;
     _settleController.animateTo(
       1.0,
-      curve: _kSettleAnimationCurve,
-      duration: _kSettleAnimationDuration,
+      curve: widget.style.settleAnimationCurve,
+      duration: widget.style.settleAnimationDuration,
     );
   }
 
@@ -556,23 +583,24 @@ class CropState extends State<Crop> with TickerProviderStateMixin {
     }
 
     // ensure minimum rectangle
-    if (areaRight - areaLeft < _kCropMinFraction) {
+    if (areaRight - areaLeft < widget.style.cropMinFraction) {
       if (left != null && right != null) {
-        final missingFraction = _kCropMinFraction - (areaRight - areaLeft);
+        final missingFraction =
+            widget.style.cropMinFraction - (areaRight - areaLeft);
         areaRight += missingFraction / 2;
         areaLeft -= missingFraction / 2;
       } else if (left != null) {
-        areaLeft = areaRight - _kCropMinFraction;
+        areaLeft = areaRight - widget.style.cropMinFraction;
       } else {
-        areaRight = areaLeft + _kCropMinFraction;
+        areaRight = areaLeft + widget.style.cropMinFraction;
       }
     }
 
-    if (areaBottom - areaTop < _kCropMinFraction) {
+    if (areaBottom - areaTop < widget.style.cropMinFraction) {
       if (top != null) {
-        areaTop = areaBottom - _kCropMinFraction;
+        areaTop = areaBottom - widget.style.cropMinFraction;
       } else {
-        areaBottom = areaTop + _kCropMinFraction;
+        areaBottom = areaTop + widget.style.cropMinFraction;
       }
     }
 
@@ -747,6 +775,7 @@ class _CropPainter extends CustomPainter {
   final double active;
   final bool showHandles;
   final bool ovalCropArea;
+  final CropStyle style;
   late Paint _handlesPaint;
   late Paint _barPaint;
   late Paint _gridPaint;
@@ -762,24 +791,26 @@ class _CropPainter extends CustomPainter {
     required this.active,
     required this.showHandles,
     required this.ovalCropArea,
+    required this.style,
   }) {
     _handlesPaint = Paint()
       ..isAntiAlias = true
-      ..color = _kCropHandleColor;
+      ..color = style.cropHandleColor;
     _barPaint = Paint()
       ..isAntiAlias = true
-      ..color = _kCropBarColor
+      ..color = style.cropBarColor
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = _kCropBarSize.height;
+      ..strokeWidth = style.cropBarSize.height;
     _gridPaint = Paint()
       ..isAntiAlias = false
-      ..color = _kCropGridColor.withOpacity(_kCropGridColor.opacity * active)
+      ..color =
+          style.cropGridColor.withOpacity(style.cropGridColor.opacity * active)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
     _imagePaint = Paint()..isAntiAlias = false;
     _overlayPaint = Paint()
       ..isAntiAlias = false
-      ..color = _kOverlayColor;
+      ..color = style.overlayColor;
   }
 
   @override
@@ -795,10 +826,10 @@ class _CropPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Rect.fromLTWH(
-      _kCropHandleSize / 2,
-      _kCropHandleSize / 2,
-      size.width - _kCropHandleSize,
-      size.height - _kCropHandleSize,
+      style.cropHandleSize / 2,
+      style.cropHandleSize / 2,
+      size.width - style.cropHandleSize,
+      size.height - style.cropHandleSize,
     );
 
     canvas.save();
@@ -878,54 +909,54 @@ class _CropPainter extends CustomPainter {
 
   void _adjustPaintsColor(double gridOpacity) {
     _overlayPaint
-      ..color = _kOverlayColor.withOpacity(
-          _kCropOverlayActiveOpacity * gridOpacity +
-              _kCropOverlayInactiveOpacity * (1.0 - gridOpacity));
+      ..color = style.overlayColor.withOpacity(
+          style.cropOverlayActiveOpacity * gridOpacity +
+              style.cropOverlayInactiveOpacity * (1.0 - gridOpacity));
     _barPaint
-      ..color = _kCropBarColor
-          .withOpacity(_kCropGridColor.opacity * (1 - gridOpacity));
+      ..color = style.cropBarColor
+          .withOpacity(style.cropGridColor.opacity * (1 - gridOpacity));
     _gridPaint
-      ..color =
-          _kCropGridColor.withOpacity(_kCropGridColor.opacity * gridOpacity);
+      ..color = style.cropGridColor
+          .withOpacity(style.cropGridColor.opacity * gridOpacity);
   }
 
   void _drawHandles(Canvas canvas, Rect boundaries, Paint paint) {
     canvas.drawOval(
       Rect.fromLTWH(
-        boundaries.left - _kCropHandleSize / 2,
-        boundaries.top - _kCropHandleSize / 2,
-        _kCropHandleSize,
-        _kCropHandleSize,
+        boundaries.left - style.cropHandleSize / 2,
+        boundaries.top - style.cropHandleSize / 2,
+        style.cropHandleSize,
+        style.cropHandleSize,
       ),
       paint,
     );
 
     canvas.drawOval(
       Rect.fromLTWH(
-        boundaries.right - _kCropHandleSize / 2,
-        boundaries.top - _kCropHandleSize / 2,
-        _kCropHandleSize,
-        _kCropHandleSize,
+        boundaries.right - style.cropHandleSize / 2,
+        boundaries.top - style.cropHandleSize / 2,
+        style.cropHandleSize,
+        style.cropHandleSize,
       ),
       paint,
     );
 
     canvas.drawOval(
       Rect.fromLTWH(
-        boundaries.right - _kCropHandleSize / 2,
-        boundaries.bottom - _kCropHandleSize / 2,
-        _kCropHandleSize,
-        _kCropHandleSize,
+        boundaries.right - style.cropHandleSize / 2,
+        boundaries.bottom - style.cropHandleSize / 2,
+        style.cropHandleSize,
+        style.cropHandleSize,
       ),
       paint,
     );
 
     canvas.drawOval(
       Rect.fromLTWH(
-        boundaries.left - _kCropHandleSize / 2,
-        boundaries.bottom - _kCropHandleSize / 2,
-        _kCropHandleSize,
-        _kCropHandleSize,
+        boundaries.left - style.cropHandleSize / 2,
+        boundaries.bottom - style.cropHandleSize / 2,
+        style.cropHandleSize,
+        style.cropHandleSize,
       ),
       paint,
     );
@@ -934,11 +965,11 @@ class _CropPainter extends CustomPainter {
   void _drawBars(Canvas canvas, Rect boundaries, Paint paint) {
     canvas.drawLine(
       Offset(
-        boundaries.topCenter.dx - _kCropBarSize.width / 2,
+        boundaries.topCenter.dx - style.cropBarSize.width / 2,
         boundaries.topCenter.dy,
       ),
       Offset(
-        boundaries.topCenter.dx + _kCropBarSize.width / 2,
+        boundaries.topCenter.dx + style.cropBarSize.width / 2,
         boundaries.topCenter.dy,
       ),
       paint,
@@ -947,22 +978,22 @@ class _CropPainter extends CustomPainter {
     canvas.drawLine(
       Offset(
         boundaries.centerRight.dx,
-        boundaries.centerRight.dy - _kCropBarSize.width / 2,
+        boundaries.centerRight.dy - style.cropBarSize.width / 2,
       ),
       Offset(
         boundaries.centerRight.dx,
-        boundaries.centerRight.dy + _kCropBarSize.width / 2,
+        boundaries.centerRight.dy + style.cropBarSize.width / 2,
       ),
       paint,
     );
 
     canvas.drawLine(
       Offset(
-        boundaries.bottomCenter.dx - _kCropBarSize.width / 2,
+        boundaries.bottomCenter.dx - style.cropBarSize.width / 2,
         boundaries.bottomCenter.dy,
       ),
       Offset(
-        boundaries.bottomCenter.dx + _kCropBarSize.width / 2,
+        boundaries.bottomCenter.dx + style.cropBarSize.width / 2,
         boundaries.bottomCenter.dy,
       ),
       paint,
@@ -971,11 +1002,11 @@ class _CropPainter extends CustomPainter {
     canvas.drawLine(
       Offset(
         boundaries.centerLeft.dx,
-        boundaries.centerLeft.dy - _kCropBarSize.width / 2,
+        boundaries.centerLeft.dy - style.cropBarSize.width / 2,
       ),
       Offset(
         boundaries.centerLeft.dx,
-        boundaries.centerLeft.dy + _kCropBarSize.width / 2,
+        boundaries.centerLeft.dy + style.cropBarSize.width / 2,
       ),
       paint,
     );
@@ -989,22 +1020,24 @@ class _CropPainter extends CustomPainter {
       ..lineTo(boundaries.left, boundaries.bottom)
       ..lineTo(boundaries.left, boundaries.top);
 
-    for (var column = 1; column < _kCropGridColumnCount; column++) {
+    for (var column = 1; column < style.cropGridColumnCount; column++) {
       path
         ..moveTo(
-            boundaries.left + column * boundaries.width / _kCropGridColumnCount,
+            boundaries.left +
+                column * boundaries.width / style.cropGridColumnCount,
             boundaries.top)
         ..lineTo(
-            boundaries.left + column * boundaries.width / _kCropGridColumnCount,
+            boundaries.left +
+                column * boundaries.width / style.cropGridColumnCount,
             boundaries.bottom);
     }
 
-    for (var row = 1; row < _kCropGridRowCount; row++) {
+    for (var row = 1; row < style.cropGridRowCount; row++) {
       path
         ..moveTo(boundaries.left,
-            boundaries.top + row * boundaries.height / _kCropGridRowCount)
+            boundaries.top + row * boundaries.height / style.cropGridRowCount)
         ..lineTo(boundaries.right,
-            boundaries.top + row * boundaries.height / _kCropGridRowCount);
+            boundaries.top + row * boundaries.height / style.cropGridRowCount);
     }
 
     canvas.drawPath(path, paint);
