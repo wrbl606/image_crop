@@ -102,7 +102,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _openImage() async {
     final pickedFile =
-        await ImagePicker().getImage(source: ImageSource.gallery);
+        await ImagePicker().pickImage(source: ImageSource.gallery);
     final file = File(pickedFile!.path);
     final sample = await ImageCrop.sampleImage(
       file: file,
