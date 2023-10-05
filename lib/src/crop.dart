@@ -36,6 +36,9 @@ class Crop extends StatefulWidget {
   final double maximumScale;
   final bool alwaysShowGrid;
   final ImageErrorListener? onImageError;
+  final bool fixedCropArea;
+  final bool ovalCropArea;
+  final bool showHandles;
 
   const Crop({
     Key? key,
@@ -44,6 +47,9 @@ class Crop extends StatefulWidget {
     this.maximumScale = 2.0,
     this.alwaysShowGrid = false,
     this.onImageError,
+    this.fixedCropArea = false,
+    this.ovalCropArea = false,
+    this.showHandles = true,
   }) : super(key: key);
 
   Crop.file(
@@ -54,6 +60,9 @@ class Crop extends StatefulWidget {
     this.maximumScale = 2.0,
     this.alwaysShowGrid = false,
     this.onImageError,
+    this.fixedCropArea = false,
+    this.ovalCropArea = false,
+    this.showHandles = true,
   })  : image = FileImage(file, scale: scale),
         super(key: key);
 
@@ -66,6 +75,9 @@ class Crop extends StatefulWidget {
     this.maximumScale = 2.0,
     this.alwaysShowGrid = false,
     this.onImageError,
+    this.fixedCropArea = false,
+    this.ovalCropArea = false,
+    this.showHandles = true,
   })  : image = AssetImage(assetName, bundle: bundle, package: package),
         super(key: key);
 
@@ -209,6 +221,8 @@ class CropState extends State<Crop> with TickerProviderStateMixin {
                 area: _area,
                 scale: _scale,
                 active: _activeController.value,
+                showHandles: widget.showHandles,
+                ovalCropArea: widget.ovalCropArea,
               ),
             ),
           ),
@@ -282,7 +296,7 @@ class CropState extends State<Crop> with TickerProviderStateMixin {
     final widgetAspectRatio = widget.aspectRatio ?? imageAspectRatio;
     double height;
     double width;
-    if (widgetAspectRatio < 1) {
+    if (widgetAspectRatio > 1) {
       height = 1.0;
       width = (widgetAspectRatio * imageHeight * viewHeight * height) /
           imageWidth /
@@ -444,7 +458,9 @@ class CropState extends State<Crop> with TickerProviderStateMixin {
     _settleController.stop(canceled: false);
     _lastFocalPoint = details.focalPoint;
     _action = _CropAction.none;
-    _handle = _hitCropHandle(_getLocalPoint(details.focalPoint));
+    _handle = widget.fixedCropArea
+        ? _CropHandleSide.none
+        : _hitCropHandle(_getLocalPoint(details.focalPoint));
     _startScale = _scale;
     _startView = _view;
   }
@@ -729,6 +745,8 @@ class _CropPainter extends CustomPainter {
   final Rect area;
   final double scale;
   final double active;
+  final bool showHandles;
+  final bool ovalCropArea;
   late Paint _handlesPaint;
   late Paint _barPaint;
   late Paint _gridPaint;
@@ -742,6 +760,8 @@ class _CropPainter extends CustomPainter {
     required this.area,
     required this.scale,
     required this.active,
+    required this.showHandles,
+    required this.ovalCropArea,
   }) {
     _handlesPaint = Paint()
       ..isAntiAlias = true
@@ -824,7 +844,20 @@ class _CropPainter extends CustomPainter {
         Rect.fromLTRB(
             boundaries.right, boundaries.top, rect.width, boundaries.bottom),
         _overlayPaint);
-
+    if (ovalCropArea) {
+      canvas.drawPath(
+        Path.combine(
+          PathOperation.difference,
+          Path()..addRect(boundaries),
+          Path()
+            ..addOval(
+              boundaries,
+            )
+            ..close(),
+        ),
+        _overlayPaint,
+      );
+    }
     if (boundaries.isEmpty == false) {
       // Don't draw the grid since it will be invisible anyway.
       if (active != 0) {
@@ -832,10 +865,12 @@ class _CropPainter extends CustomPainter {
       }
       // Don't draw the bars if grid is visible.
       // Grid borders will act as top, right, left and bottom bars.
-      if (active != 1) {
-        _drawBars(canvas, boundaries, _barPaint);
+      if (showHandles) {
+        if (active != 1) {
+          _drawBars(canvas, boundaries, _barPaint);
+        }
+        _drawHandles(canvas, boundaries, _handlesPaint);
       }
-      _drawHandles(canvas, boundaries, _handlesPaint);
     }
 
     canvas.restore();

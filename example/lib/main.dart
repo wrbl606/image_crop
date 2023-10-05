@@ -60,6 +60,10 @@ class _MyAppState extends State<MyApp> {
         Expanded(
           child: Crop.file(
             _sample!,
+            fixedCropArea: true,
+            ovalCropArea: true,
+            showHandles: false,
+            aspectRatio: 1.0,
             key: cropKey,
           ),
         ),
