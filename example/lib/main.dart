@@ -60,13 +60,7 @@ class _MyAppState extends State<MyApp> {
         Expanded(
           child: Crop.file(
             _sample!,
-            fixedCropArea: true,
-            ovalCropArea: true,
-            showHandles: false,
-            aspectRatio: 1.0,
             key: cropKey,
-            style: const CropStyle(
-                cropOverlayInactiveOpacity: 0.9, cropOverlayActiveOpacity: 0.7),
           ),
         ),
         Container(
@@ -108,7 +102,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _openImage() async {
     final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+        await ImagePicker().getImage(source: ImageSource.gallery);
     final file = File(pickedFile!.path);
     final sample = await ImageCrop.sampleImage(
       file: file,
